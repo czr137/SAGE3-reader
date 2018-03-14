@@ -1,6 +1,15 @@
 import numpy as np
 from struct import unpack
 import xarray as xr
+from datetime import datetime
+
+
+def yyyymmddhhmmss_to_datetime(yyyymmdd: int, hhmmss: int) -> datetime:
+    """ Convert an integer pair of yyyymmdd and hhmmss to a useful time format.
+    """
+    return datetime(
+        yyyymmdd // 10000, (yyyymmdd // 100) % 100, yyyymmdd % 100,
+        hhmmss // 10000, (hhmmss // 100) % 100, hhmmss % 100)
 
 
 def l2binary_to_dataset(file) -> xr.Dataset:
@@ -135,6 +144,11 @@ def l2binary_to_dataset(file) -> xr.Dataset:
         extinction_ratio_qa_flags = np.array(unpack('>' + 'i' * num_aer_bins,
                                                     f.read(num_aer_bins * 4)), dtype=np.int32)
 
+        # Convert date and time pairs to a single datetime.
+        start_datetime = yyyymmddhhmmss_to_datetime(start_date, start_time)
+        end_datetime = yyyymmddhhmmss_to_datetime(end_date, end_time)
+        gt_datetime = [yyyymmddhhmmss_to_datetime(date, time) for (date, time) in zip(gt_date, gt_time)]
+
         # Return the data as an xarray dataset
         ds = xr.Dataset(
             {
@@ -144,18 +158,15 @@ def l2binary_to_dataset(file) -> xr.Dataset:
                 'event_type_earth': np.int32(event_type_earth),
                 'beta_angle': np.float32(beta_angle),
                 'event_status_flags': np.int32(event_status_flags),
-                'start_data': np.int32(start_date),
-                'start_time': np.int32(start_time),
+                'start_time': start_datetime,
                 'start_latitude': np.float32(start_latitude),
                 'start_longitude': np.float32(start_longitude),
                 'start_altitude': np.float32(start_altitude),
-                'end_data': np.int32(end_date),
-                'end_time': np.int32(end_time),
+                'end_time': end_datetime,
                 'end_latitude': np.float32(end_latitude),
                 'end_longitude': np.float32(end_longitude),
                 'end_altitude': np.float32(end_altitude),
-                'gt_date': (['num_ground_tracks'], np.int32(gt_date)),
-                'gt_time': (['num_ground_tracks'], np.int32(gt_time)),
+                'gt_time': (['num_ground_tracks'], gt_datetime),
                 'gt_latitude': (['num_ground_tracks'], gt_latitude),
                 'gt_longitude': (['num_ground_tracks'], gt_longitude),
                 'gt_ray_dir': (['num_ground_tracks'], gt_ray_dir),
