@@ -2,6 +2,7 @@ import numpy as np
 from struct import unpack
 import xarray as xr
 from datetime import datetime
+from glob import glob
 
 
 def yyyymmddhhmmss_to_datetime(yyyymmdd: int, hhmmss: int) -> datetime:
@@ -111,15 +112,15 @@ def l2binary_to_dataset(file) -> xr.Dataset:
         tp_qa_flags = np.array(unpack('>' + 'i' * num_bins, f.read(num_bins * 4)), dtype=np.int32)
 
         # Read the Aerosol Information
-        aerosol_wavelengths = np.array(unpack('>' + 'f' * num_aer_wavelengths, 
+        aerosol_wavelengths = np.array(unpack('>' + 'f' * num_aer_wavelengths,
                                               f.read(num_aer_wavelengths * 4)), dtype=np.float32)
-        aerosol_half_bandwidths = np.array(unpack('>' + 'f' * num_aer_wavelengths, 
+        aerosol_half_bandwidths = np.array(unpack('>' + 'f' * num_aer_wavelengths,
                                                   f.read(num_aer_wavelengths * 4)), dtype=np.float32)
-        stratospheric_optical_depth = np.array(unpack('>' + 'f' * num_aer_wavelengths, 
+        stratospheric_optical_depth = np.array(unpack('>' + 'f' * num_aer_wavelengths,
                                                       f.read(num_aer_wavelengths * 4)), dtype=np.float32)
-        stratospheric_optical_depth_error = np.array(unpack('>' + 'f' * num_aer_wavelengths, 
+        stratospheric_optical_depth_error = np.array(unpack('>' + 'f' * num_aer_wavelengths,
                                                             f.read(num_aer_wavelengths * 4)), dtype=np.float32)
-        stratospheric_optical_depth_qa_flags = np.array(unpack('>' + 'i' * num_aer_wavelengths, 
+        stratospheric_optical_depth_qa_flags = np.array(unpack('>' + 'i' * num_aer_wavelengths,
                                                                f.read(num_aer_wavelengths * 4)), dtype=np.int32)
 
         # Read the Aerosol Extinction data
@@ -147,7 +148,8 @@ def l2binary_to_dataset(file) -> xr.Dataset:
         # Convert date and time pairs to a single datetime.
         start_datetime = yyyymmddhhmmss_to_datetime(start_date, start_time)
         end_datetime = yyyymmddhhmmss_to_datetime(end_date, end_time)
-        gt_datetime = [yyyymmddhhmmss_to_datetime(date, time) for (date, time) in zip(gt_date, gt_time)]
+        gt_datetime = [yyyymmddhhmmss_to_datetime(date, time) if date != fill_value_int else np.datetime64('NaT')
+                       for (date, time) in zip(gt_date, gt_time)]
 
         # Return the data as an xarray dataset
         ds = xr.Dataset(
@@ -218,7 +220,8 @@ def l2binary_to_dataset(file) -> xr.Dataset:
                 'stratospheric_optical_depth_qa_flags': (['Aerosol_wavelengths'], stratospheric_optical_depth_qa_flags),
                 'aerosol_extinction': (['Aerosol_wavelengths', 'Aerosol_altitude'], aerosol_extinction),
                 'aerosol_extinction_error': (['Aerosol_wavelengths', 'Aerosol_altitude'], aerosol_extinction_error),
-                'aerosol_extinction_qa_flags': (['Aerosol_wavelengths', 'Aerosol_altitude'], aerosol_extinction_qa_flags),
+                'aerosol_extinction_qa_flags': (
+                ['Aerosol_wavelengths', 'Aerosol_altitude'], aerosol_extinction_qa_flags),
                 'aerosol_spectral_dependence_flag': (['Aerosol_altitude'], aerosol_spectral_dependence_flag),
                 'extinction_ratio': (['Aerosol_altitude'], extinction_ratio),
                 'extinction_ratio_error': (['Aerosol_altitude'], extinction_ratio_error),
@@ -253,3 +256,12 @@ def l2binary_to_dataset(file) -> xr.Dataset:
                 ds[var] = ds[var].where(ds[var] != fill_value_float)
 
         return ds
+
+
+def multi_path_l2binary_to_dataset(path):
+    files = glob(path + '/**/*.00', recursive=True)
+    dataset = xr.concat([l2binary_to_dataset(file) for file in files], dim='profile_id')
+    dataset.set_coords(
+        ['yyyyddd', 'mission_time', 'start_time', 'start_latitude', 'start_longitude', 'start_altitude', 'end_time',
+         'end_latitude', 'end_longitude', 'end_altitude', ], inplace=True)
+    return dataset.sortby(dataset.profile_id)
