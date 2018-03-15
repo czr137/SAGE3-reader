@@ -22,7 +22,7 @@ def l2binary_to_dataset(file) -> xr.Dataset:
     # Read all the data into memory
     with open(file, 'rb') as f:
         # Read the File Header
-        (profile_id, yyyyddd, instrument_time, fill_value_int, fill_value_float, mission_id) = \
+        (event_id, yyyyddd, instrument_time, fill_value_int, fill_value_float, mission_id) = \
             unpack('>iififi', f.read(6 * 4))
 
         # Read the Version Tracking data
@@ -228,7 +228,7 @@ def l2binary_to_dataset(file) -> xr.Dataset:
                 'extinction_ratio_qa_flags': (['Aerosol_altitude'], extinction_ratio_qa_flags)
             },
             coords={
-                'profile_id': np.int32(profile_id),
+                'event_id': np.int32(event_id),
                 'altitude': altitude,
                 'Aerosol_wavelengths': aerosol_wavelengths,
                 'Aerosol_altitude': altitude[:num_aer_bins]
@@ -260,8 +260,8 @@ def l2binary_to_dataset(file) -> xr.Dataset:
 
 def multi_path_l2binary_to_dataset(path):
     files = glob(path + '/**/*.00', recursive=True)
-    dataset = xr.concat([l2binary_to_dataset(file) for file in files], dim='profile_id')
+    dataset = xr.concat([l2binary_to_dataset(file) for file in files], dim='event_id')
     dataset.set_coords(
         ['yyyyddd', 'mission_time', 'start_time', 'start_latitude', 'start_longitude', 'start_altitude', 'end_time',
          'end_latitude', 'end_longitude', 'end_altitude', ], inplace=True)
-    return dataset.sortby('profile_id')
+    return dataset.sortby('event_id')
