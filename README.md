@@ -31,7 +31,7 @@ ground track date and time integers | ground track datetime64
 To load data for a single profile:
 
 ``` python
-from sage3reader import l2binary_to_dataset
+from sage3reader.sage3reader import l2binary_to_dataset
 
 s3data = l2binary_to_dataset('/path/to/file')
 ```
@@ -39,7 +39,7 @@ s3data = l2binary_to_dataset('/path/to/file')
 To load all profiles in a directory tree:
 
 ``` python
-from sage3reader import multi_path_l2binary_to_dataset
+from sage3reader.sage3reader import multi_path_l2binary_to_dataset
 
 s3data = multi_path_l2binary_to_dataset('/path/to/files')
 ```
