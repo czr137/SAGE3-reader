@@ -264,4 +264,4 @@ def multi_path_l2binary_to_dataset(path):
     dataset.set_coords(
         ['yyyyddd', 'mission_time', 'start_time', 'start_latitude', 'start_longitude', 'start_altitude', 'end_time',
          'end_latitude', 'end_longitude', 'end_altitude', ], inplace=True)
-    return dataset.sortby(dataset.profile_id)
+    return dataset.sortby('profile_id')
