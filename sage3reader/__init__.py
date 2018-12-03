@@ -1,2 +1,3 @@
-from .sage3reader import l2binary_to_dataset
+from .sage3reader import l2_v5_0_binary_to_dataset
+from .sage3reader import l2_v5_1_binary_to_dataset
 from .sage3reader import multi_path_l2binary_to_dataset
