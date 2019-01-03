@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='sage3reader',
-    version='0.1.1',
+    version='0.2.0',
     packages=find_packages(exclude=['contrib', 'docs', 'tests*']),
     url='http://arg.usask.ca',
     license='MIT',
