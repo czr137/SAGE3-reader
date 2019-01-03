@@ -214,7 +214,7 @@ def l2_v5_0_binary_to_dataset(file) -> xr.Dataset:
                 'pressure': (['altitude'], pressure),
                 'pressure_error': (['altitude'], pressure_error),
                 'tp_qa_flags': (['altitude'], tp_qa_flags),
-                'Half–Bandwidths of Aerosol Channels': (['Aerosol_wavelengths'], aerosol_half_bandwidths),
+                'Half-Bandwidths of Aerosol Channels': (['Aerosol_wavelengths'], aerosol_half_bandwidths),
                 'stratospheric_optical_depth': (['Aerosol_wavelengths'], stratospheric_optical_depth),
                 'stratospheric_optical_depth_error': (['Aerosol_wavelengths'], stratospheric_optical_depth_error),
                 'stratospheric_optical_depth_qa_flags': (['Aerosol_wavelengths'], stratospheric_optical_depth_qa_flags),
@@ -242,7 +242,7 @@ def l2_v5_0_binary_to_dataset(file) -> xr.Dataset:
                 'Version: Spectroscopy': np.float32(spectroscopy_ver),
                 'Version: GRAM 95': np.float32(gram95_ver),
                 'Version: Meteorological': np.float32(met_ver),
-                'Altitude–Based Grid Spacing': altitude_spacing,
+                'Altitude-Based Grid Spacing': altitude_spacing,
                 '_FillValue': fill_value_int
             })
 
@@ -465,15 +465,16 @@ def l2_v5_1_binary_to_dataset(file) -> xr.Dataset:
                 'pressure': (['altitude'], pressure),
                 'pressure_error': (['altitude'], pressure_error),
                 'tp_qa_flags': (['altitude'], tp_qa_flags),
-                'Half–Bandwidths of Aerosol Channels': (['Aerosol_wavelengths'], aerosol_half_bandwidths),
-                'Molecular_SCT': (['Aerosol_wavelengths'], molecular_sct),
-                'Molecular_SCT_uncert': (['Aerosol_wavelengths'], molecular_sct_uncert),
-                'stratospheric_optical_depth': (['Aerosol_wavelengths'], stratospheric_optical_depth),
-                'stratospheric_optical_depth_error': (['Aerosol_wavelengths'], stratospheric_optical_depth_error),
-                'stratospheric_optical_depth_qa_flags': (['Aerosol_wavelengths'], stratospheric_optical_depth_qa_flags),
-                'aerosol_extinction': (['Aerosol_wavelengths', 'Aerosol_altitude'], aerosol_extinction),
-                'aerosol_extinction_error': (['Aerosol_wavelengths', 'Aerosol_altitude'], aerosol_extinction_error),
-                'aerosol_extinction_qa_flags': (['Aerosol_wavelengths', 'Aerosol_altitude'],
+                'aerosol_wavelengths': (['Aerosol_channel'], aerosol_wavelengths),
+                'Half Bandwidths of Aerosol Channels': (['Aerosol_channel'], aerosol_half_bandwidths),
+                'Molecular_SCT': (['Aerosol_channel'], molecular_sct),
+                'Molecular_SCT_uncert': (['Aerosol_channel'], molecular_sct_uncert),
+                'stratospheric_optical_depth': (['Aerosol_channel'], stratospheric_optical_depth),
+                'stratospheric_optical_depth_error': (['Aerosol_channel'], stratospheric_optical_depth_error),
+                'stratospheric_optical_depth_qa_flags': (['Aerosol_channel'], stratospheric_optical_depth_qa_flags),
+                'aerosol_extinction': (['Aerosol_channel', 'Aerosol_altitude'], aerosol_extinction),
+                'aerosol_extinction_error': (['Aerosol_channel', 'Aerosol_altitude'], aerosol_extinction_error),
+                'aerosol_extinction_qa_flags': (['Aerosol_channel', 'Aerosol_altitude'],
                                                 aerosol_extinction_qa_flags),
                 'HexErrFlag': np.int8(HexErrFlag),
                 'ContWindowClosedFlag': np.int8(ContWindowClosedFlag),
@@ -493,7 +494,7 @@ def l2_v5_1_binary_to_dataset(file) -> xr.Dataset:
                                  2.50e+02, 2.00e+02, 1.50e+02, 1.00e+02, 7.00e+01, 5.00e+01, 4.00e+01,
                                  3.00e+01, 2.00e+01, 1.00e+01, 7.00e+00, 5.00e+00, 4.00e+00, 3.00e+00,
                                  2.00e+00, 1.00e+00, 7.00e-01, 5.00e-01, 4.00e-01, 3.00e-01, 1.00e-01],
-                'Aerosol_wavelengths': aerosol_wavelengths,
+                'Aerosol_channel': range(num_aer_wavelengths),
                 'Aerosol_altitude': altitude[:num_aer_bins]
             },
             attrs={
@@ -506,7 +507,7 @@ def l2_v5_1_binary_to_dataset(file) -> xr.Dataset:
                 'Version: Spectroscopy': np.float32(spectroscopy_ver),
                 'Version: GRAM 95': np.float32(gram95_ver),
                 'Version: Meteorological': np.float32(met_ver),
-                'Altitude–Based Grid Spacing': altitude_spacing,
+                'Altitude Based Grid Spacing': altitude_spacing,
                 '_FillValue': fill_value_int
             })
 
@@ -514,7 +515,7 @@ def l2_v5_1_binary_to_dataset(file) -> xr.Dataset:
         assert(len(ds.num_ground_tracks) == num_ground_tracks)
         assert(len(ds.altitude) == num_bins)
         assert(len(ds.met_pressure) == num_met_grid)
-        assert(len(ds.Aerosol_wavelengths) == num_aer_wavelengths)
+        assert(len(ds.Aerosol_channel) == num_aer_wavelengths)
 
         for var in ds:
             if np.issubdtype(ds[var].dtype, np.floating) and ds[var].size > 1:
@@ -527,7 +528,10 @@ def l2_v5_1_binary_to_dataset(file) -> xr.Dataset:
 def multi_path_l2binary_to_dataset(path, version='5.10'):
     files = glob(path + '/**/g3b.sspb.*' + version, recursive=True)
     if version == '5.10':
-        dataset = xr.concat([l2_v5_1_binary_to_dataset(file) for file in files], dim='event_id')
+        ds = l2_v5_1_binary_to_dataset(files[0])
+        for file in files[1:]:
+            ds = xr.concat([ds, l2_v5_1_binary_to_dataset(file)], dim='event_id').sortby('event_id')
+        return ds
     elif version == '5.00':
-        dataset = xr.concat([l2_v5_0_binary_to_dataset(file) for file in files], dim='event_id')
-    return dataset.sortby('event_id')
+        ds = xr.concat([l2_v5_0_binary_to_dataset(file) for file in files], dim='event_id')
+        return ds.sortby('event_id')
