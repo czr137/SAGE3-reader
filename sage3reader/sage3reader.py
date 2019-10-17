@@ -251,7 +251,7 @@ def l2_v5_0_binary_to_dataset(file) -> xr.Dataset:
         assert (len(ds.altitude) == num_bins)
         assert (len(ds.Aerosol_wavelengths) == num_aer_wavelengths)
 
-        for var in ds:
+        for var in ds.variables:
             if np.issubdtype(ds[var].dtype, np.floating) and ds[var].size > 1:
                 ds[var] = ds[var].where(ds[var] != fill_value_float)
 
@@ -517,7 +517,7 @@ def l2_v5_1_binary_to_dataset(file) -> xr.Dataset:
         assert(len(ds.met_pressure) == num_met_grid)
         assert(len(ds.Aerosol_channel) == num_aer_wavelengths)
 
-        for var in ds:
+        for var in ds.variables:
             if np.issubdtype(ds[var].dtype, np.floating) and ds[var].size > 1:
                 ds[var] = ds[var].where(ds[var] != fill_value_float)
 
@@ -526,12 +526,9 @@ def l2_v5_1_binary_to_dataset(file) -> xr.Dataset:
 
 
 def multi_path_l2binary_to_dataset(path, version='5.10'):
-    files = glob(path + '/**/g3b.sspb.*' + version, recursive=True)
+    files = sorted(glob(path + '/**/g3b.sspb.*' + version, recursive=True))
     if version == '5.10':
-        ds = l2_v5_1_binary_to_dataset(files[0])
-        for file in files[1:]:
-            ds = xr.concat([ds, l2_v5_1_binary_to_dataset(file)], dim='event_id').sortby('event_id')
-        return ds
+        ds = xr.concat([l2_v5_1_binary_to_dataset(file) for file in files], dim='event_id')
     elif version == '5.00':
         ds = xr.concat([l2_v5_0_binary_to_dataset(file) for file in files], dim='event_id')
-        return ds.sortby('event_id')
+    return ds.sortby('event_id')
