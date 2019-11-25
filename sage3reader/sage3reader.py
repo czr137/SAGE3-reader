@@ -295,9 +295,9 @@ def l2_v5_1_binary_to_dataset(file) -> xr.Dataset:
         gt_ray_dir = np.array(unpack('>' + 'f' * num_ground_tracks, f.read(num_ground_tracks * 4)), dtype=np.float32)
 
         # Read Space Craft Information
-        sc_latitude = np.array(unpack('>' + 'i' * num_ground_tracks, f.read(num_ground_tracks * 4)), dtype=np.float32)
-        sc_longitude = np.array(unpack('>' + 'i' * num_ground_tracks, f.read(num_ground_tracks * 4)), dtype=np.float32)
-        sc_altitude = np.array(unpack('>' + 'i' * num_ground_tracks, f.read(num_ground_tracks * 4)), dtype=np.float32)
+        sc_latitude = np.array(unpack('>' + 'f' * num_ground_tracks, f.read(num_ground_tracks * 4)), dtype=np.float32)
+        sc_longitude = np.array(unpack('>' + 'f' * num_ground_tracks, f.read(num_ground_tracks * 4)), dtype=np.float32)
+        sc_altitude = np.array(unpack('>' + 'f' * num_ground_tracks, f.read(num_ground_tracks * 4)), dtype=np.float32)
 
         # Read Profile Altitude Levels data
         homogeneity = np.array(unpack('>' + 'i' * num_bins, f.read(num_bins * 4)), dtype=np.int32)
