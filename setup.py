@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='sage3reader',
-    version='0.2.3',
+    version='0.2.4',
     packages=find_packages(exclude=['contrib', 'docs', 'tests*']),
     url='http://arg.usask.ca',
     license='MIT',

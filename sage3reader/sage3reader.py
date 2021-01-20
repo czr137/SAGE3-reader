@@ -1,3 +1,4 @@
+from pathlib import Path
 import numpy as np
 from struct import unpack
 import xarray as xr
@@ -262,12 +263,12 @@ def l2_v5_0_binary_to_dataset(file) -> xr.Dataset:
         return ds
 
 
-def l2_v5_1_binary_to_dataset(file) -> xr.Dataset:
+def l2_v5_1_5_2_binary_to_dataset(file) -> xr.Dataset:
     """
-    Read the Level 2 Solar Event Species Profiles for a version 5 SAGE III or SAGE III ISS binary file.
+    Read the Level 2 Solar Event Species Profiles for a version 5.1/5.2 SAGE III or SAGE III ISS binary file.
     https://eosweb.larc.nasa.gov/sites/default/files/project/sage3/guide/Data_Product_User_Guide.pdf
     """
-
+    print(file)
     # Read all the data into memory
     with open(file, 'rb') as f:
         # Read the File Header
@@ -526,9 +527,9 @@ def l2_v5_1_binary_to_dataset(file) -> xr.Dataset:
 
 
 def multi_path_l2binary_to_dataset(path, version='5.10'):
-    files = sorted(glob(path + '/**/g3b.sspb.*' + version, recursive=True))
-    if version == '5.10':
-        ds = xr.concat([l2_v5_1_binary_to_dataset(file) for file in files], dim='event_id')
-    elif version == '5.00':
+    files = sorted(Path(path).rglob('*.*'))
+    if version in ['5.1', '5.10', '5.2', '5.20']:
+        ds = xr.concat([l2_v5_1_5_2_binary_to_dataset(file) for file in files], dim='event_id')
+    elif version in ['5.0', '5.00']:
         ds = xr.concat([l2_v5_0_binary_to_dataset(file) for file in files], dim='event_id')
     return ds.sortby('event_id')

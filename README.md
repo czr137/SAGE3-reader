@@ -2,6 +2,11 @@
 
 A python reader for SAGE III and SAGE III ISS binary data files into an xarray dataset.
 
+Tested with versions:
+* 5.0 
+* 5.1
+* 5.2
+
 ## Downloads 
 The binary files are not supplied and must be downloaded by the user.  
 [SAGEIII binary files](https://eosweb.larc.nasa.gov/project/sage3/sage3_table)  
