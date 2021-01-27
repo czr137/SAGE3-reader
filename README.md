@@ -9,8 +9,8 @@ Tested with versions:
 
 ## Downloads 
 The binary files are not supplied and must be downloaded by the user.  
-[SAGEIII binary files](https://eosweb.larc.nasa.gov/project/sage3/sage3_table)  
-[SAGEIII-ISS binary files](https://eosweb.larc.nasa.gov/project/sageiii-iss/sageiii-iss_table)
+[SAGEIII binary files](https://asdc.larc.nasa.gov/project/SAGE%20III-M3M)  
+[SAGEIII-ISS binary files](https://asdc.larc.nasa.gov/project/SAGE%20III-ISS?level=2)
 
 # Installation
 
