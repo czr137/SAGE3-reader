@@ -5,9 +5,12 @@ with open("README.md", "r") as fh:
 
 setup(
     name='sage3reader',
-    version='0.2.4',
+    version='0.2.5',
     packages=find_packages(exclude=['contrib', 'docs', 'tests*']),
-    url='http://arg.usask.ca',
+    url='https://github.com/czr137/SAGE3-reader',
+    project_urls={
+        'Group Homepage': 'https://research-groups.usask.ca/osiris/',
+    },
     license='MIT',
     author='Chris Roth',
     author_email='chris.roth@usask.ca',
