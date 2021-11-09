@@ -273,7 +273,9 @@ def l2_v5_1_5_2_binary_to_dataset(file) -> xr.Dataset:
     with open(file, 'rb') as f:
         # Read the File Header
 
-        (event_id, date, fraction_time, latitude, longitude, time, fill_value_int, fill_value_float, mission_id) = \
+        event_str = f.read(12)
+
+        (_, date, fraction_time, latitude, longitude, time, fill_value_int, fill_value_float, mission_id) = \
             unpack('>iifffiifi', f.read(9 * 4))
 
         # Read the Version Tracking data
@@ -326,7 +328,12 @@ def l2_v5_1_5_2_binary_to_dataset(file) -> xr.Dataset:
 
         # Read the CCD and Bit flags
         (ccd_temperature, spectrometer_zenith_temperature, ccd_temperature_minus_tec, ephemeris_quality, speccalshift,
-         speccalstretch, qaflag) = unpack('>ffffffi', f.read(7 * 4))
+         speccalstretch) = unpack('>ffffff', f.read(6 * 4))
+
+        azimuth_angle_start, azimuth_angle_end = unpack('>ff', f.read(2 * 4))
+
+        qaflag, = unpack('>i', f.read(4))
+
         qaflag_altitude = np.array(unpack('>' + 'i' * num_bins, f.read(num_bins * 4)), dtype=np.int32)
 
         # Read the Composite Ozone data
@@ -394,6 +401,9 @@ def l2_v5_1_5_2_binary_to_dataset(file) -> xr.Dataset:
             aerosol_extinction_qa_flags[i] = np.array(unpack('>' + 'i' * num_aer_bins,
                                                              f.read(num_aer_bins * 4)))
 
+        # Assert file is fully read.
+        assert (f.tell() == f.seek(0, 2))
+
         # Decode QABits
         (HexErrFlag, ContWindowClosedFlag, TimeQualFlag, DMPExoFlag, BlockExoFlag, SpectCalFlag, SolarEclipseFlag) = \
             (lambda x: [x >> bit & 1 for bit in range(7)])(qaflag)
@@ -412,6 +422,8 @@ def l2_v5_1_5_2_binary_to_dataset(file) -> xr.Dataset:
                 'event_type_spacecraft': np.int32(event_type_spacecraft),
                 'event_type_earth': np.int32(event_type_earth),
                 'beta_angle': np.float32(beta_angle),
+                'azimuth_angle_start': np.float32(azimuth_angle_start),
+                'azimuth_angle_end': np.float32(azimuth_angle_end),
                 'aurora_flag': np.int32(aurora_flag),
                 'ephemeris source': np.int32(ephemeris_source),
                 'gt_time': (['num_ground_tracks'], gt_datetime),
@@ -487,7 +499,7 @@ def l2_v5_1_5_2_binary_to_dataset(file) -> xr.Dataset:
                 'DMPAltFlag': (['altitude'], np.int8(qaflag_altitude))
             },
             coords={
-                'event_id': np.int32(event_id),
+                'event_id': event_str,
                 'altitude': altitude,
                 'met_pressure': [1.00e+03, 9.75e+02, 9.50e+02, 9.25e+02, 9.00e+02, 8.75e+02, 8.50e+02,
                                  8.25e+02, 8.00e+02, 7.75e+02, 7.50e+02, 7.25e+02, 7.00e+02, 6.50e+02,
